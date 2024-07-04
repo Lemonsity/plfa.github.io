@@ -853,6 +853,12 @@ equations relating the data.
 
 ## Writing definitions interactively
 
+```agda
+myplus : ℕ → ℕ → ℕ
+myplus zero m = m
+myplus (suc n) m = suc (n + m)
+```
+
 Agda is designed to be used with the Emacs text editor, and the two
 in combination provide features that help to create definitions
 and proofs interactively.
@@ -1018,7 +1024,50 @@ represents a positive natural, and represent zero by `⟨⟩ O`.
 Confirm that these both give the correct answer for zero through four.
 
 ```agda
--- Your code goes here
+inc : Bin → Bin
+inc ⟨⟩ = ⟨⟩ I
+inc (b' O) = b' I
+inc (b' I) = (inc b') O
+
+_ : inc ⟨⟩ ≡ ⟨⟩ I
+_ = begin inc ⟨⟩ ≡⟨⟩ (⟨⟩ I) ∎
+_ : inc (inc ⟨⟩) ≡ ⟨⟩ I O
+_ = begin inc (inc ⟨⟩) ≡⟨⟩ (⟨⟩ I O) ∎
+_ : inc (inc (inc ⟨⟩)) ≡ ⟨⟩ I I
+_ = begin inc (inc (inc ⟨⟩)) ≡⟨⟩ ⟨⟩ I I ∎
+_ : inc (inc (inc (inc ⟨⟩))) ≡ ⟨⟩ I O O
+_ = inc (inc (inc (inc ⟨⟩))) ≡⟨⟩ ⟨⟩ I O O ∎
+
+to : ℕ → Bin
+to zero = ⟨⟩
+to (suc n) = inc (to n)
+
+_ : to 0 ≡ ⟨⟩
+_ = begin to 0 ≡⟨⟩ ⟨⟩ ∎
+_ : to 1 ≡ ⟨⟩ I
+_ = begin to 1 ≡⟨⟩ ⟨⟩ I ∎
+_ : to 2 ≡ ⟨⟩ I O
+_ = begin to 2 ≡⟨⟩ ⟨⟩ I O ∎
+_ : to 3 ≡ ⟨⟩ I I
+_ = begin to 3 ≡⟨⟩ ⟨⟩ I I ∎
+_ : to 4 ≡ ⟨⟩ I O O
+_ = begin to 4 ≡⟨⟩ (⟨⟩ I O O) ∎
+
+from : Bin → ℕ
+from ⟨⟩ = 0
+from (b' O) = 0 + ((from b') + (from b'))
+from (b' I) = 1 + ((from b') + (from b'))
+
+_ : 0 ≡ from ⟨⟩
+_ = begin 0 ≡⟨⟩ from ⟨⟩ ∎
+_ : 1 ≡ from (⟨⟩ I)
+_ = begin 1 ≡⟨⟩ from (⟨⟩ I) ∎
+_ : 2 ≡ from (⟨⟩ I O)
+_ = begin 2 ≡⟨⟩ from (⟨⟩ I O) ∎
+_ : 3 ≡ from (⟨⟩ I I)
+_ = begin 3 ≡⟨⟩ from (⟨⟩ I I) ∎
+_ : 4 ≡ from (⟨⟩ I O O)
+_ = begin 4 ≡⟨⟩ from (⟨⟩ I O O) ∎
 ```
 
 
