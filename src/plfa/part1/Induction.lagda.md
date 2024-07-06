@@ -721,7 +721,28 @@ first four days using a finite story of creation, as
 [earlier](/Naturals/#finite-creation).
 
 ```agda
--- Your code goes here
+-- I don't entirely know what we are doing...
+day0 : ∀ (m p : ℕ) → (0 + m) + p ≡ 0 + (m + p)
+day0 m p =
+  begin
+    (0 + m) + p ≡⟨⟩ m + p ≡⟨⟩ 0 + (m + p)
+  ∎
+
+day1 : ∀ (m p : ℕ) → (1 + m) + p ≡ 1 + (m + p)
+day1 m p =
+  begin
+    (1 + m) + p
+  ≡⟨⟩
+    (suc (0 + m)) + p
+  ≡⟨⟩
+    suc ((0 + m) + p)
+  ≡⟨ cong suc (day0 m p) ⟩
+    suc (0 + (m + p))
+  ≡⟨⟩
+    1 + (m + p)
+  ∎
+-- day 2, 3, 4 are identical
+-- replace [day0 m p] with [dayN m p]
 ```
 
 ## Associativity with rewrite
@@ -893,7 +914,8 @@ just apply the previous results which show addition
 is associative and commutative.
 
 ```agda
--- Your code goes here
++-swap : ∀ (n m p : ℕ) → m + (n + p) ≡ n + (m + p)
++-swap n m p rewrite +-comm m (n + p) | +-assoc n p m | +-comm p m = refl
 ```
 
 
@@ -907,6 +929,12 @@ for all naturals `m`, `n`, and `p`.
 
 ```agda
 -- Your code goes here
+*-distr-+ : ∀ (m n p : ℕ) → (m + n) * p ≡ m * p + n * p
+*-distr-+ zero n p = refl
+*-distr-+ (suc m) n p
+  rewrite *-distr-+ m n p
+        | +-assoc p (m * p) (n * p) = refl
+-- Can someone tell me the coding style of Agda...        
 ```
 
 
