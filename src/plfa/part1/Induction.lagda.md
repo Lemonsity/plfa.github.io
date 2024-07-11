@@ -947,7 +947,11 @@ Show multiplication is associative, that is,
 for all naturals `m`, `n`, and `p`.
 
 ```agda
--- Your code goes here
+*-assoc : ∀ (m n p : ℕ) → (m * n) * p ≡ m * (n * p)
+*-assoc zero n p = refl
+*-assoc (suc m) n p
+  rewrite *-distr-+ n (m * n) p
+        | *-assoc m n p = refl
 ```
 
 
@@ -961,7 +965,26 @@ for all naturals `m` and `n`.  As with commutativity of addition,
 you will need to formulate and prove suitable lemmas.
 
 ```agda
--- Your code goes here
+*-zeroʳ : ∀ (n : ℕ) → n * zero ≡ 0
+*-zeroʳ zero = refl
+*-zeroʳ (suc n) rewrite *-zeroʳ n = refl
+
+*-identityˡ : ∀ (n : ℕ) → 1 * n ≡ n
+*-identityˡ n rewrite +-identityʳ n = refl
+
+*-suc : ∀ (m n : ℕ) → m * (suc n) ≡ m + (m * n)
+*-suc zero n = refl
+*-suc (suc m) n
+  rewrite *-suc m n
+        | sym (+-assoc n m (m * n))
+        | +-comm n m
+        | +-assoc m n (m * n) = refl
+
+*-comm : ∀ (m n : ℕ) → m * n ≡ n * m
+*-comm m zero rewrite *-zeroʳ m = refl
+*-comm m (suc n)
+  rewrite *-suc m n
+        | *-comm m n = refl
 ```
 
 
@@ -974,7 +997,9 @@ Show
 for all naturals `n`. Did your proof require induction?
 
 ```agda
--- Your code goes here
+0∸n≡0 : ∀ (n : ℕ) → 0 ∸ n ≡ 0
+0∸n≡0 zero = refl
+0∸n≡0 (suc n) = refl
 ```
 
 
@@ -987,7 +1012,14 @@ Show that monus associates with addition, that is,
 for all naturals `m`, `n`, and `p`.
 
 ```agda
--- Your code goes here
+∸-+-assoc : ∀ (m n p : ℕ) → m ∸ n ∸ p ≡ m ∸ (n + p)
+∸-+-assoc zero n p
+  rewrite 0∸n≡0 (n + p)
+        | 0∸n≡0 n
+        | 0∸n≡0 p = refl
+∸-+-assoc (suc m) zero p = refl
+∸-+-assoc (suc m) (suc n) p
+  rewrite ∸-+-assoc m n p = refl
 ```
 
 
