@@ -947,7 +947,11 @@ Show multiplication is associative, that is,
 for all naturals `m`, `n`, and `p`.
 
 ```agda
--- Your code goes here
+*-assoc : ∀ (m n p : ℕ) → (m * n) * p ≡ m * (n * p)
+*-assoc zero n p = refl
+*-assoc (suc m) n p
+  rewrite *-distr-+ n (m * n) p
+        | *-assoc m n p = refl
 ```
 
 
@@ -961,7 +965,26 @@ for all naturals `m` and `n`.  As with commutativity of addition,
 you will need to formulate and prove suitable lemmas.
 
 ```agda
--- Your code goes here
+*-zeroʳ : ∀ (n : ℕ) → n * zero ≡ 0
+*-zeroʳ zero = refl
+*-zeroʳ (suc n) rewrite *-zeroʳ n = refl
+
+*-identityˡ : ∀ (n : ℕ) → 1 * n ≡ n
+*-identityˡ n rewrite +-identityʳ n = refl
+
+*-suc : ∀ (m n : ℕ) → m * (suc n) ≡ m + (m * n)
+*-suc zero n = refl
+*-suc (suc m) n
+  rewrite *-suc m n
+        | sym (+-assoc n m (m * n))
+        | +-comm n m
+        | +-assoc m n (m * n) = refl
+
+*-comm : ∀ (m n : ℕ) → m * n ≡ n * m
+*-comm m zero rewrite *-zeroʳ m = refl
+*-comm m (suc n)
+  rewrite *-suc m n
+        | *-comm m n = refl
 ```
 
 
@@ -974,7 +997,9 @@ Show
 for all naturals `n`. Did your proof require induction?
 
 ```agda
--- Your code goes here
+0∸n≡0 : ∀ (n : ℕ) → 0 ∸ n ≡ 0
+0∸n≡0 zero = refl
+0∸n≡0 (suc n) = refl
 ```
 
 
@@ -987,7 +1012,14 @@ Show that monus associates with addition, that is,
 for all naturals `m`, `n`, and `p`.
 
 ```agda
--- Your code goes here
+∸-+-assoc : ∀ (m n p : ℕ) → m ∸ n ∸ p ≡ m ∸ (n + p)
+∸-+-assoc zero n p
+  rewrite 0∸n≡0 (n + p)
+        | 0∸n≡0 n
+        | 0∸n≡0 p = refl
+∸-+-assoc (suc m) zero p = refl
+∸-+-assoc (suc m) (suc n) p
+  rewrite ∸-+-assoc m n p = refl
 ```
 
 
@@ -1001,8 +1033,31 @@ Show the following three laws
 
 for all `m`, `n`, and `p`.
 
-```
--- Your code goes here
+```agda
+^-distribˡ-+-* : ∀ (m n p : ℕ) → m ^ (n + p) ≡ (m ^ n) * (m ^ p)
+^-distribˡ-+-* m zero p rewrite +-identityʳ (m ^ p) = refl
+^-distribˡ-+-* m (suc n) p
+  rewrite ^-distribˡ-+-* m n p
+        | *-assoc m (m ^ n) (m ^ p) = refl
+
+^-distribʳ-* : ∀ (m n p : ℕ) → (m * n) ^ p ≡ (m ^ p) * (n ^ p)
+^-distribʳ-* m n zero = refl
+^-distribʳ-* m n (suc p)
+  rewrite ^-distribʳ-* m n p
+        | *-assoc m n ((m ^ p) * (n ^ p))
+        | sym (*-assoc n (m ^ p) (n ^ p))
+        | *-comm n (m ^ p)
+        | *-assoc (m ^ p) n (n ^ p)
+        | *-assoc m (m ^ p) (n * (n ^ p)) = refl
+
+^-*-assoc : ∀ (m n p : ℕ) → (m ^ n) ^ p ≡ m ^ (n * p)
+^-*-assoc m zero zero = refl
+^-*-assoc m zero (suc p)
+  rewrite ^-*-assoc m zero p = refl
+^-*-assoc m (suc n) p
+  rewrite ^-distribʳ-* m (m ^ n) p
+        | ^-*-assoc m n p
+        | ^-distribˡ-+-* m p (n * p) = refl
 ```
 
 
@@ -1027,7 +1082,41 @@ over bitstrings:
 For each law: if it holds, prove; if not, give a counterexample.
 
 ```agda
--- Your code goes here
+data Bin : Set where
+  ⟨⟩ : Bin
+  _O : Bin → Bin
+  _I : Bin → Bin
+
+inc : Bin → Bin
+inc ⟨⟩ = ⟨⟩ I
+inc (b' O) = b' I
+inc (b' I) = (inc b') O
+
+to : ℕ → Bin
+to zero = ⟨⟩
+to (suc n) = inc (to n)
+
+from : Bin → ℕ
+from ⟨⟩ = 0
+from (b' O) = 0 + ((from b') + (from b'))
+from (b' I) = 1 + ((from b') + (from b'))
+
+from-homo : ∀ (b : Bin) → from (inc b) ≡ suc (from b)
+from-homo ⟨⟩ = refl
+from-homo (b O) = refl
+from-homo (b I)
+  rewrite from-homo b
+        | +-suc (suc (from b)) (from b) = refl
+
+-- to (from b) = b is not provable
+-- consider (⟨⟩ 0 0 0 0)
+-- Which get map to 0, then back to (⟨⟩ 0), which are not identical
+
+from-to-is-id : ∀ (n : ℕ) → from (to n) ≡ n
+from-to-is-id zero = refl
+from-to-is-id (suc n)
+  rewrite from-homo (to n)
+        | from-to-is-id n = refl
 ```
 
 
