@@ -243,13 +243,17 @@ partial order but not a total order.
 Give an example of a preorder that is not a partial order.
 
 ```agda
--- Your code goes here
+-- Consider a set with ≥ 2 elements
+-- Consider the preorder, where every pair is related
+-- Such relation is reflexive and transitive, but not anti-sym
 ```
 
 Give an example of a partial order that is not a total order.
 
 ```agda
--- Your code goes here
+-- Take set to be P({1, 2, 3, 4})
+-- Relationship with be set containment
+-- This is partial, but not total
 ```
 
 ## Reflexivity
@@ -264,6 +268,7 @@ as that will make it easier to invoke reflexivity:
   → n ≤ n
 ≤-refl {zero} = z≤n
 ≤-refl {suc n} = s≤s ≤-refl
+-- Or [≤-refl {suc n} = s≤s {n} {n} ≤-refl] for explicit arg
 ```
 The proof is a straightforward induction on the implicit argument `n`.
 In the base case, `zero ≤ zero` holds by `z≤n`.  In the inductive
@@ -362,7 +367,12 @@ The above proof omits cases where one argument is `z≤n` and one
 argument is `s≤s`.  Why is it ok to omit them?
 
 ```agda
--- Your code goes here
+--z≤n s≤s case:
+--  We skip this case because z≤n binds m to 0
+--  When m ≡ 0, the second case cannot be s≤s
+  
+--s≤s z≤n case:
+--  Similar, but binds n to 0
 ```
 
 
@@ -552,6 +562,7 @@ transitivity proves `m + p ≤ n + q`, as was to be shown.
 Show that multiplication is monotonic with regard to inequality.
 
 ```agda
+-- TODO
 -- Your code goes here
 ```
 
