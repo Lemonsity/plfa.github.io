@@ -15,8 +15,8 @@ the next step is to define relations, such as _less than or equal_.
 ```agda
 import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; refl; cong)
-open import Data.Nat using (ℕ; zero; suc; _+_)
-open import Data.Nat.Properties using (+-comm; +-identityʳ)
+open import Data.Nat using (ℕ; zero; suc; _+_; _*_)
+open import Data.Nat.Properties using (+-comm; +-identityʳ; *-comm)
 ```
 
 
@@ -562,8 +562,29 @@ transitivity proves `m + p ≤ n + q`, as was to be shown.
 Show that multiplication is monotonic with regard to inequality.
 
 ```agda
--- TODO
--- Your code goes here
+*-monoˡ-≤ : ∀ (m n p : ℕ)
+  → m ≤ n
+  ---------------
+  → m * p ≤ n * p
+*-monoˡ-≤ zero n p m≤n = z≤n
+-- vvv This line makes the difference, one have to know def of *
+*-monoˡ-≤ (suc m) (suc n) p (s≤s m≤n) = +-monoʳ-≤ p (m * p) (n * p) (*-monoˡ-≤ m n p m≤n)
+
+*-monoʳ-≤ : ∀ (p m n : ℕ)
+  → m ≤ n
+  ---------------
+  → p * m ≤ p * n
+*-monoʳ-≤ p m n m≤n
+  rewrite *-comm p m
+        | *-comm p n = *-monoˡ-≤ m n p m≤n
+
+
+*-mono-≤ : ∀ (m n p q : ℕ)
+  → m ≤ n
+  → p ≤ q
+    -------------
+  → m * p ≤ n * q
+*-mono-≤ m n p q m≤n p≤q  =  ≤-trans (*-monoˡ-≤ m n p m≤n) (*-monoʳ-≤ n p q p≤q)
 ```
 
 
@@ -611,7 +632,13 @@ Show that strict inequality is transitive. Use a direct proof. (A later
 exercise exploits the relation between < and ≤.)
 
 ```agda
--- Your code goes here
+<-trans : ∀ (m n p : ℕ)
+  → m < n
+  → n < p
+  -------
+  → m < p
+<-trans zero (suc n) (suc p) m<n n<p = z<s
+<-trans (suc m) (suc n) (suc p) (s<s m<n) (s<s n<p) = s<s (<-trans m n p m<n n<p)
 ```
 
 #### Exercise `trichotomy` (practice) {#trichotomy}
@@ -629,6 +656,7 @@ similar to that used for totality.
 [negation](/Negation/).)
 
 ```agda
+-- TODO
 -- Your code goes here
 ```
 
