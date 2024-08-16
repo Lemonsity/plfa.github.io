@@ -656,8 +656,28 @@ similar to that used for totality.
 [negation](/Negation/).)
 
 ```agda
--- TODO
--- Your code goes here
+data _>_ : ℕ → ℕ → Set where
+  GTCons : ∀ {n m : ℕ} → (n < m) → (m > n)
+
+data StrictTotal : ℕ → ℕ → Set where
+  TotalLT : ∀ {m n : ℕ} → (m < n) → StrictTotal m n
+  TotalEQ : ∀ {m n : ℕ} → (m ≡ n) → StrictTotal m n
+  TotalGT : ∀ {m n : ℕ} → (m > n) → StrictTotal m n
+
+zero≡zero : 0 ≡ 0
+zero≡zero = refl
+
+trichotomy-helper : ∀ (m n : ℕ)
+  → StrictTotal m n → StrictTotal (suc m) (suc n)
+trichotomy-helper m n (TotalLT m<n) = TotalLT (s<s m<n)
+trichotomy-helper m n (TotalEQ m≡n) = TotalEQ (cong suc m≡n)
+trichotomy-helper m n (TotalGT (GTCons n<m)) = TotalGT (GTCons (s<s n<m))
+
+trichotomy : ∀ (m n : ℕ) → StrictTotal m n
+trichotomy zero zero = TotalEQ zero≡zero
+trichotomy zero (suc n) = TotalLT z<s
+trichotomy (suc m) zero = TotalGT (GTCons z<s)
+trichotomy (suc m) (suc n) = trichotomy-helper m n (trichotomy m n)
 ```
 
 #### Exercise `+-mono-<` (practice) {#plus-mono-less}
@@ -666,7 +686,32 @@ Show that addition is monotonic with respect to strict inequality.
 As with inequality, some additional definitions may be required.
 
 ```agda
--- Your code goes here
++-monoˡ-< : ∀ (m n p : ℕ)
+  → m < n
+    ------------
+  → m + p < n + p
++-monoˡ-< m n zero m<n
+  rewrite +-comm m zero
+        | +-comm n zero = m<n
++-monoˡ-< m n (suc p) m<n
+  rewrite +-comm m (suc p) | +-comm n (suc p)
+        | +-comm p m | +-comm p n = s<s (+-monoˡ-< m n p m<n)
+
++-monoʳ-< : ∀ (p m n : ℕ)
+  → m < n
+    -------------
+  → p + m < p + n
++-monoʳ-< p m n m<n
+  rewrite +-comm p m | +-comm p n = +-monoˡ-< m n p m<n
+
++-mono-< : ∀ (m n p q : ℕ)
+  → m < n
+  → p < q
+    -------------
+  → m + p < n + q
++-mono-< m n p q m<n p<q = <-trans (m + p) (n + p) (n + q)
+                           (+-monoˡ-< m n p m<n)
+                           (+-monoʳ-< n p q p<q)
 ```
 
 #### Exercise `≤→<, <→≤` (recommended) {#leq-iff-less}
@@ -674,7 +719,17 @@ As with inequality, some additional definitions may be required.
 Show that `suc m ≤ n` implies `m < n`, and conversely.
 
 ```agda
--- Your code goes here
+≤→< : ∀ (m n : ℕ)
+  → suc m ≤ n
+  → m < n
+≤→< zero (suc n) (s≤s s0≤sn) = z<s
+≤→< (suc m) (suc n) (s≤s sm≤n) = s<s (≤→< m n sm≤n)
+
+<→≤ : ∀ (m n : ℕ)
+  → m < n
+  → suc m ≤ n
+<→≤ zero (suc _) z<s = s≤s z≤n
+<→≤ (suc m) (suc n) (s<s m<n) = s≤s (<→≤ m n m<n)
 ```
 
 #### Exercise `<-trans-revisited` (practice) {#less-trans-revisited}
@@ -684,7 +739,14 @@ using the relation between strict inequality and inequality and
 the fact that inequality is transitive.
 
 ```agda
--- Your code goes here
+<-trans-revisited : ∀ (m n p : ℕ)
+  → m < n
+  → n < p
+    -----
+  → m < p
+-- Eh, the [suc] in the middle is so annoying
+
+
 ```
 
 
