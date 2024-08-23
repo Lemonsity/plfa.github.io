@@ -16,7 +16,7 @@ the next step is to define relations, such as _less than or equal_.
 import Relation.Binary.PropositionalEquality as Eq
 open Eq using (_≡_; refl; cong)
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_)
-open import Data.Nat.Properties using (+-comm; +-identityʳ; *-comm)
+open import Data.Nat.Properties using (+-comm; +-identityʳ; *-comm; +-suc)
 ```
 
 
@@ -744,9 +744,10 @@ the fact that inequality is transitive.
   → n < p
     -----
   → m < p
--- Eh, the [suc] in the middle is so annoying
-
-
+<-trans-revisited m n p m<n n<p =
+  ≤→< m p (≤-trans (<→≤ m n m<n)
+                   (≤-trans (+-monoˡ-≤ 0 1 n z≤n)
+                            (<→≤ n p n<p)))
 ```
 
 
@@ -853,7 +854,13 @@ successor of the sum of two even numbers, which is even.
 Show that the sum of two odd numbers is even.
 
 ```agda
--- Your code goes here
+o+o≡e : ∀ {m n : ℕ}
+  → odd m
+  → odd n
+    ------------
+  → even (m + n)
+o+o≡e (suc zero) on = suc on
+o+o≡e (suc (suc om)) on = suc (suc (o+o≡e om on))
 ```
 
 #### Exercise `Bin-predicates` (stretch) {#Bin-predicates}
@@ -913,7 +920,136 @@ properties of `One`. It may also help to prove the following:
     to (2 * n) ≡ (to n) O
 
 ```agda
--- Your code goes here
+data Bin : Set where
+  ⟨⟩ : Bin
+  _O : Bin → Bin
+  _I : Bin → Bin
+
+inc : Bin → Bin
+inc ⟨⟩ = ⟨⟩ I
+inc (b' O) = b' I
+inc (b' I) = (inc b') O
+
+to : ℕ → Bin
+to zero = ⟨⟩
+to (suc n) = inc (to n)
+
+to-homo : ∀ (n : ℕ) → to (suc n) ≡ inc (to n)
+to-homo zero = refl
+to-homo (suc n) = refl
+
+from : Bin → ℕ
+from ⟨⟩ = 0
+from (b' O) = 0 + ((from b') + (from b'))
+from (b' I) = 1 + ((from b') + (from b'))
+
+from-homo : ∀ (b : Bin) → from (inc b) ≡ suc (from b)
+from-homo ⟨⟩ = refl
+from-homo (b O) = refl
+from-homo (b I)
+  rewrite from-homo b
+        | +-suc (suc (from b)) (from b) = refl
+
+-- to (from b) = b is not provable
+-- consider (⟨⟩ 0 0 0 0)
+-- Which get map to 0, then back to (⟨⟩ 0), which are not identical
+
+from-to-is-id : ∀ (n : ℕ) → from (to n) ≡ n
+from-to-is-id zero = refl
+from-to-is-id (suc n)
+  rewrite from-homo (to n)
+        | from-to-is-id n = refl
+
+data One : Bin → Set where
+  OneBase : One (⟨⟩ I)
+  OneO    : ∀ (b : Bin) → One b → One (b O)
+  OneI    : ∀ (b : Bin) → One b → One (b I)
+
+data Can : Bin → Set where
+  CanZero : Can ⟨⟩
+  CanLead : ∀ (b : Bin) → One b → Can b
+
+inc-preserve-One : ∀ (b : Bin)
+  → One b
+    -----------
+  → One (inc b)
+inc-preserve-One (⟨⟩ I) OneBase = OneO (⟨⟩ I) OneBase
+inc-preserve-One (b O) (OneO b Oneb) = OneI b Oneb
+inc-preserve-One (b I) (OneI b Oneb) = OneO (inc b) (inc-preserve-One b Oneb)
+
+inc-preserve-Can : ∀ (b : Bin)
+  → Can b
+    -----------
+  → Can (inc b)
+inc-preserve-Can ⟨⟩ CanZero = CanLead (⟨⟩ I) OneBase
+inc-preserve-Can (b O) (CanLead (b O) (OneO b Oneb)) = CanLead (b I) (OneI b Oneb)
+inc-preserve-Can (⟨⟩ I) (CanLead (⟨⟩ I) OneBase) = CanLead (⟨⟩ I O) (OneO (⟨⟩ I) OneBase)
+inc-preserve-Can (b I) (CanLead (b I) (OneI b Oneb)) =
+  CanLead (inc (b I))
+          (OneO (inc b) (inc-preserve-One b Oneb))
+
+
+to-Can : ∀ (n : ℕ) → Can (to n)
+to-Can zero = CanZero
+to-Can (suc n)
+  rewrite to-homo n = inc-preserve-Can (to n) (to-Can n)
+
++-suc' : ∀ (m n : ℕ) → m + suc n ≡ suc m + n
++-suc' m n
+  rewrite +-suc m n = refl
+
+1≤n→to-n+n≡to-n-O : ∀ (n : ℕ)
+  → 1 ≤ n
+    ---------------------
+  → to (n + n) ≡ (to n) O
+1≤n→to-n+n≡to-n-O (suc n) (s≤s 0≤n) = helper n
+  where helper : ∀ (n : ℕ) → to ((suc n) + (suc n)) ≡ (to (suc n)) O
+        helper zero = refl
+        helper (suc n)
+          rewrite to-homo (suc n)
+                | +-suc' n (suc n)
+                | helper n = refl
+
+Oneb→1≤fromb : ∀ (b : Bin)
+  → One b
+    ----------
+  → 1 ≤ from b
+Oneb→1≤fromb (⟨⟩ I) OneBase = s≤s z≤n
+Oneb→1≤fromb (b O) (OneO b Oneb) = +-mono-≤ 0 (from b) 1 (from b) z≤n (Oneb→1≤fromb b Oneb)
+Oneb→1≤fromb .(b I) (OneI b Oneb) = s≤s z≤n
+
+Can→iso : ∀ (b : Bin)
+  → Can b
+    ---------------
+  → to (from b) ≡ b
+Can→iso ⟨⟩ CanZero = refl
+Can→iso (⟨⟩ I) (CanLead (⟨⟩ I) OneBase) = refl
+Can→iso (b O) (CanLead (b O) (OneO b Oneb)) = {!!}
+Can→iso (b I) (CanLead (b I) (OneI b Oneb)) = {!!}
+
+-- TODO
+
+{-
++-mono-≤ : ∀ (m n p q : ℕ)
+  → m ≤ n
+  → p ≤ q
+    -------------
+  → m + p ≤ n + q-}
+--    Can b
+--    ---------------
+--    to (from b) ≡ b
+
+-- Hint: For each of these, you may first need to prove related
+-- properties of `One`. It may also help to prove the following:
+
+--    One b
+--    ----------
+--    1 ≤ from b
+
+--    1 ≤ n
+--    ---------------------
+--    to (2 * n) ≡ (to n) O
+
 ```
 
 ## Standard library
