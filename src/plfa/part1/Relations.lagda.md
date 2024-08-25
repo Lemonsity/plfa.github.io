@@ -14,7 +14,7 @@ the next step is to define relations, such as _less than or equal_.
 
 ```agda
 import Relation.Binary.PropositionalEquality as Eq
-open Eq using (_≡_; refl; cong)
+open Eq using (_≡_; refl; cong; sym)
 open import Data.Nat using (ℕ; zero; suc; _+_; _*_)
 open import Data.Nat.Properties using (+-comm; +-identityʳ; *-comm; +-suc)
 ```
@@ -1024,32 +1024,14 @@ Can→iso : ∀ (b : Bin)
   → to (from b) ≡ b
 Can→iso ⟨⟩ CanZero = refl
 Can→iso (⟨⟩ I) (CanLead (⟨⟩ I) OneBase) = refl
-Can→iso (b O) (CanLead (b O) (OneO b Oneb)) = {!!}
-Can→iso (b I) (CanLead (b I) (OneI b Oneb)) = {!!}
-
--- TODO
-
-{-
-+-mono-≤ : ∀ (m n p q : ℕ)
-  → m ≤ n
-  → p ≤ q
-    -------------
-  → m + p ≤ n + q-}
---    Can b
---    ---------------
---    to (from b) ≡ b
-
--- Hint: For each of these, you may first need to prove related
--- properties of `One`. It may also help to prove the following:
-
---    One b
---    ----------
---    1 ≤ from b
-
---    1 ≤ n
---    ---------------------
---    to (2 * n) ≡ (to n) O
-
+Can→iso (b O) (CanLead (b O) (OneO b Oneb))
+  rewrite (1≤n→to-n+n≡to-n-O (from b)
+                             (Oneb→1≤fromb b Oneb))
+        | Can→iso b (CanLead b Oneb) = refl
+Can→iso (b I) (CanLead (b I) (OneI b Oneb))
+  rewrite (1≤n→to-n+n≡to-n-O (from b)
+                             (Oneb→1≤fromb b Oneb))
+        | Can→iso b (CanLead b Oneb) = refl
 ```
 
 ## Standard library
